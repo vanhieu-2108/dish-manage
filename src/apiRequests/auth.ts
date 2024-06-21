@@ -1,5 +1,9 @@
 import http from "@/lib/http";
-import { LoginBodyType, LoginResType } from "@/schemaValidations/auth.schema";
+import {
+  LoginBodyType,
+  LoginResType,
+  LogoutBodyType,
+} from "@/schemaValidations/auth.schema";
 
 const authApiRequest = {
   sLogin: (body: LoginBodyType) => http.post<LoginResType>("/auth/login", body),
@@ -7,6 +11,23 @@ const authApiRequest = {
     http.post<LoginResType>("/api/auth/login", body, {
       baseUrl: "",
     }),
+  sLogout: (
+    body: LogoutBodyType & {
+      accessToken: string;
+    }
+  ) =>
+    http.post(
+      "/auth/logout",
+      {
+        refreshToken: body.refreshToken,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${body.accessToken}`,
+        },
+      }
+    ),
+  logout: () => http.post("/api/auth/logout", null, { baseUrl: "" }), // CLient gọi đến route handler, không cần truyền AT và RT vì đã lưu trong cookie rồi
 };
 
 export default authApiRequest;
