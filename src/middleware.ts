@@ -10,11 +10,13 @@ export function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get("refreshToken")?.value;
   // Chưa đăng nhập thì không cho vào privatePaths
   if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
-    return NextResponse.redirect(new URL("/login", request.nextUrl));
+    const url = new URL("/login", request.url);
+    url.searchParams.set("clearTokens", "true");
+    return NextResponse.redirect(url);
   }
   // Đã đăng nhập thì không cho vào unAuthPaths
   if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken) {
-    return NextResponse.redirect(new URL("/", request.nextUrl));
+    return NextResponse.redirect(new URL("/", request.url));
   }
   // Trường hợp đăng nhập rồi nhưng accessToken hết hạn
   if (
@@ -22,8 +24,9 @@ export function middleware(request: NextRequest) {
     !accessToken &&
     refreshToken
   ) {
-    const url = new URL("/logout", request.nextUrl);
+    const url = new URL("/refresh-token", request.url);
     url.searchParams.set("refreshToken", refreshToken);
+    url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 

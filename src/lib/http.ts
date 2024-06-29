@@ -1,5 +1,9 @@
 import envConfig from "@/config";
-import { normalizePath } from "@/lib/utils";
+import {
+  normalizePath,
+  setAccessTokenToLocalStorage,
+  setRefreshTokenToLocalStorage,
+} from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 import { redirect } from "next/navigation";
 
@@ -140,6 +144,8 @@ const request = async <Response>(
           }
         }
       } else {
+        // Đây là trường hợp chúng ta vẫn còn accessToken (còn hạn)
+        // Và chúng ta gọi api ở Next.js Server (Route Handler, Server Component đến Server Backend)
         const accessToken = (options?.headers as any)?.Authorization.split(
           "Bearer "
         )[1];
@@ -152,11 +158,10 @@ const request = async <Response>(
   // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser)
   if (isClient) {
     const normalizeUrl = normalizePath(url);
-    console.log("normalizeUrl", normalizeUrl);
     if (normalizeUrl === "api/auth/login") {
       const { accessToken, refreshToken } = (payload as LoginResType).data;
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
+      setAccessTokenToLocalStorage(accessToken);
+      setRefreshTokenToLocalStorage(refreshToken);
     } else if (normalizeUrl === "api/auth/logout") {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
